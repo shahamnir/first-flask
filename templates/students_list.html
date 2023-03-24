@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{url_for('static',filename='styles.css') }}">
+    <title>Students List </title>
+</head>
+<body>
+    <h1> The Students List</h1>
+    {% if students_list %}
+    <table>
+        <thead>
+            <tr>
+                
+                    <td> first_name </td>
+                    <td> last_name </td>
+                    <td> email </td>
+                    <td> age </td>
+                    <td> phone </td>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                {% for student in students_list %}
+                <tr>
+                    <td> {{student.first_name}} </td>
+                    <td> {{student.last_name}} </td>
+                    <td><a href="{{url_for('student_update',mail=student.email)}}"> {{student.email}} </td> </a>
+                    <td> {{student.age}}</td>
+                    <td> {{student.phone}}</td>
+                </tr>
+                {% endfor %}
+            </tr>
+        </tbody>
+    </table>
+    {% endif %}
+    
+
+</body>
+</html>

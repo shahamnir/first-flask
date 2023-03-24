@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student</title>
+</head>
+<body>
+    <form action = "{{url_for('student')}}" method="post">
+        <p> {{form.first_name.label}} {{form.first_name}} </p>
+        <p> {{form.last_name.label}} {{form.last_name}}</p>
+        <p> {{form.email.label}} {{form.email}}</p>
+        <p> {{form.age.label}} {{form.age}}</p>
+        <p> {{form.phone.label}} {{form.phone}}</p>
+        <p> <input type="submit" value="submit"></p>   
+    </form>
+</body>
+</html>

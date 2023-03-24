@@ -93,12 +93,13 @@ def students_list():
 
 @app.route('/student/<mail>',methods=['GET','POST'])
 def student_update(mail):
-    student = get_student_by_email(mail)
-    form = StudentForm(student,request.form)
-    render_template(url_for('student_signup'),form=form)
+     student = get_student_by_email(mail)
+     form = StudentForm(student)
+     return render_template(url_for('student_signup'),form=form)
+     
 
 
-    
+     
 
 app.add_url_rule('/register','register',register,methods=['GET','POST'])
 

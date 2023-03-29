@@ -1,3 +1,4 @@
+{% extends 'base.html' %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -5,20 +6,25 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="{{url_for('static',filename='styles.css') }}">
-    <title>Students List </title>
+    <title>{%block title %} Students List {% endblock %}</title>
 </head>
 <body>
+    {% block content %}
     <h1> The Students List</h1>
+    <form action="{{url_for('search_name',name=name)}}" method="post">
+        Search By name <input type="text" name="name">
+                        <input type="submit" value="Search">
+    </form><br>
     {% if students_list %}
     <table>
         <thead>
             <tr>
                 
-                    <td> first_name </td>
-                    <td> last_name </td>
+                    <td> First Name </td>
+                    <td> Last Name </td>
                     <td> email </td>
-                    <td> age </td>
-                    <td> phone </td>
+                    <td> Age </td>
+                    <td> Phone </td>
             </tr>
         </thead>
         <tbody>
@@ -27,9 +33,14 @@
                 <tr>
                     <td> {{student.first_name}} </td>
                     <td> {{student.last_name}} </td>
-                    <td><a href="{{url_for('student_update',mail=student.email)}}"> {{student.email}} </td> </a>
+                    <td><a href="{{url_for('student_update',id=student.id)}}"> {{student.email}} </td> </a>
                     <td> {{student.age}}</td>
                     <td> {{student.phone}}</td>
+                    <td>
+                         <form action="{{url_for('student_delete',id=student.id)}}" method="post">
+                            <input type="submit" value="Delete Student" onclick="return confirm('Are you sure you want to delete this student?');">
+                         </form>
+                    </td>
                 </tr>
                 {% endfor %}
             </tr>
@@ -37,6 +48,6 @@
     </table>
     {% endif %}
     
-
+    {% endblock %}
 </body>
 </html>

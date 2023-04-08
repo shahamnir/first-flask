@@ -1,11 +1,10 @@
-table,td{
+table,td,th{
     border-style: solid;
     border-width: 1px;
 }
 
 thead{
     background-color: aqua;
-    font-weight: bold;
 }
 
 #base_ul {
@@ -13,3 +12,7 @@ thead{
     color:brown;
     
   }
+
+body{
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}

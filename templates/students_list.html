@@ -11,20 +11,22 @@
 <body>
     {% block content %}
     <h1> The Students List</h1>
-    <form action="{{url_for('search_name',name=name)}}" method="post">
-        Search By name <input type="text" name="name">
-                        <input type="submit" value="Search">
-    </form><br>
+    <p><form action="{{ url_for('search_name')}}"method='post'>
+        Search by name <input type="text" name="name">
+        <input type="submit" value="Search">
+    </form></p>    
     {% if students_list %}
+    <form action="{{ url_for('students_delete')}}" method="post">
     <table>
         <thead>
             <tr>
                 
-                    <td> First Name </td>
-                    <td> Last Name </td>
-                    <td> email </td>
-                    <td> Age </td>
-                    <td> Phone </td>
+                    <th> First Name </th>
+                    <th> Last Name </th>
+                    <th> email </th>
+                    <th> Age </th>
+                    <th> Phone </th>
+                    <th> Courses </th>
             </tr>
         </thead>
         <tbody>
@@ -37,15 +39,29 @@
                     <td> {{student.age}}</td>
                     <td> {{student.phone}}</td>
                     <td>
+                        {% if student.courses%}
+                            {% for course in student.courses%}
+                                {% if loop.last %}
+                                    <span> {{course.name}}</span>
+                                    {% else %}
+                                    <span> {{course.name}}, </span>
+                                {% endif %}
+                            {% endfor%}   
+                        {% endif %}
+                    </td>
+                    <td>
                          <form action="{{url_for('student_delete',id=student.id)}}" method="post">
                             <input type="submit" value="Delete Student" onclick="return confirm('Are you sure you want to delete this student?');">
                          </form>
                     </td>
+                    <td> <input type="checkbox" name="students" value={{student.id}}> </td>
                 </tr>
                 {% endfor %}
             </tr>
         </tbody>
     </table>
+    <p><input type="submit" value="Delete checked students" onclick="return confirm('Are you sure you want to delete those students?');"></p>
+    </form>
     {% endif %}
     
     {% endblock %}

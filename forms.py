@@ -1,5 +1,5 @@
 from flask_wtf import Form
-from wtforms.fields import EmailField,IntegerField,StringField,HiddenField
+from wtforms.fields import EmailField,IntegerField,StringField,HiddenField,SelectField,BooleanField
 
 class StudentForm(Form):
     id = HiddenField()
@@ -8,4 +8,9 @@ class StudentForm(Form):
     email = EmailField(label='email')
     age = IntegerField(label='Age')
     phone = StringField(label='Phone')
-    student_id = IntegerField(label='Student ID')
+    courses = SelectField(label='Courses')
+
+
+class CourseForm(Form):
+    id = HiddenField()
+    name = StringField(label='Course Name')

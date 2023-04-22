@@ -1,0 +1,47 @@
+{% extends 'base.html'%}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{%block title%}Courses{%endblock%}</title>
+</head>
+<body>
+    {%block content%}
+    <header>
+        <h1> Course List:</h1>
+    </header>
+    <main>
+        <div>
+            <p>
+                <form action="{{url_for('search_name')}}">
+                    <input type="text" placeholder="search by name" name="name"/>
+                    <input type="submit" value="search"/>
+                </form>
+            </p>
+
+        </div>
+        <table>
+            <tr>
+                <th>Course Name</th>
+            </tr>
+        {% if courses %}
+        <form action="{{url_for('delete_courses')}}" method="post">
+            {% for course in courses %}
+                <tr>
+                    <td>{{course.name}}</td>
+                    <td><a href="{{ url_for('course', id=course.id) }}">details</a></td>
+                    
+                    <td><input type="checkbox" name="courses" value={{course.id}}></td>
+                </tr>
+                
+            {%endfor%} 
+        {% endif%}
+        </table>
+        <p><input type="submit" value="Delete courses"></p>
+        </form>
+    </main>
+    {%endblock%}
+</body>
+</html>

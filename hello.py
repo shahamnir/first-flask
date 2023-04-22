@@ -106,6 +106,11 @@ class Name(Resource):
 
 
 
+courses = db.Table('Courses',
+        db.Column('student_id',db.Integer, db.ForeignKey('student.student_id'),primary_key=True),
+        db.Column('course_id',db.Integer, db.ForeignKey('course.course_id'),primary_key=True)
+                   )
+
 class Student(db.Model):
     id = db.Column('student_id', db.Integer,primary_key = True)
     first_name = db.Column(db.String(100))
@@ -113,20 +118,19 @@ class Student(db.Model):
     email = db.Column(db.String(100))
     age = db.Column(db.Integer)
     phone = db.Column(db.String(100))
-    courses = db.relationship('Course',backref='student',lazy = True, cascade="all, delete-orphan")
+    courses = db.relationship('Course',secondary=courses, backref=db.backref('students', lazy=True))
 
-    def __init__(self,first_name,last_name,email,age,phone):
+    def __init__(self,first_name,last_name,email,age,phone,courses= []) -> None: 
         self.first_name = first_name
         self.last_name = last_name
         self.email = email
         self.age = age
         self.phone = phone
+        self.courses = courses
 
 class Course(db.Model):
      id = db.Column('course_id',db.Integer,primary_key = True)
      name = db.Column(db.String(100))
-     student_id = db.Column(db.Integer,db.ForeignKey('student.student_id', ondelete='CASCADE')
-                            ,nullable = False)
 
      def __init__(self,name):
           self.name = name
@@ -140,10 +144,7 @@ def home():
      response = make_response(render_template('home.html'))
      return response
 
-@app.route('/<name>')
-def hello_name(name):
-    #return f'Hello {name}'
-     return render_template('hello.html',content=name)
+
 
 @app.route('/login',methods=['GET','POST'])
 def login():
@@ -184,19 +185,58 @@ def grades():
     grades = request.args
     return render_template('grades_form.html',grades=grades)
 
+
+@app.route('/courses',methods=['GET','POST'])
+def courses():     
+    if request.method == 'POST':
+          name = request.form['name']
+          course = Course(name=name)
+          db.session.add(course)
+          db.session.commit()
+          return redirect(url_for('courses'))
+    else:
+          courses=Course.query.all()
+          return render_template('courses.html',courses=courses)
+     
+@app.route('/course/<int:id>',methods=['GET','POST'])
+def course(id):
+     course = Course.query.get(id)
+     if request.method == 'GET':
+        form = CourseForm(obj=course)
+        return render_template('course.html',form=form)
+     
+     else:
+          course.name = request.form['name']
+          db.session.commit()
+          return redirect(url_for('courses'))
+     
+@app.route('/add_course')
+def add_course():
+     form = CourseForm()
+     return render_template('course.html',form=form)
+
+@app.route('/courses_delete',methods=['POST'])
+def delete_courses():
+     courses_ids = request.form.getlist('courses')
+     for course_id in courses_ids:
+          course = Course.query.get(course_id)
+          db.session.delete(course)
+     db.session.commit()
+     return redirect(url_for('courses'))
+ 
+
 @app.route('/student',methods=['GET','POST'])
 def student():
      if request.method == 'POST':
           first_name = request.form['first_name']
           last_name = request.form['last_name']
           email = request.form['email']
-          phone = request.form['phone']
           age = request.form['age']
-          student = Student(first_name,last_name,email,phone,age)
-          courses_ids = request.form.getlist('courses')
-          for course_id in courses_ids:
-               course = Course.query.get(course_id)
-               student.courses.append(course)
+          phone = request.form['phone']
+          courses_ids = [int(id) for id in request.form.getlist('courses')]
+          courses = Course.query.filter(Course.id.in_(courses_ids)).all()
+          student = Student(first_name,last_name,email,age,phone)
+          student.courses.extend(courses)
           db.session.add(student) 
           db.session.commit() 
           return redirect(url_for('students_list'))
@@ -213,8 +253,11 @@ def student_details(id):
           student.first_name = form['first_name']
           student.last_name = form['last_name']
           student.email = form['email']
-          student.phone = form['phone']
           student.age = form['age']
+          student.phone = form['phone']
+          courses_ids = [int(id) for id in request.form.getlist('courses')]
+          courses = Course.query.filter(Course.id.in_(courses_ids)).all()
+          student.courses.extend(courses)
           db.session.commit() 
           return redirect(url_for('students_list'))
 
@@ -266,11 +309,10 @@ def student_update(id):
           student.email = request.form['email']
           student.phone = request.form['phone']
           student.age = request.form['age']
-          courses_ids = request.form.getlist('courses')
-          for course_id in courses_ids:
-               course = Course.query.get(course_id)
-               student.courses.append(course)
-          db.session.commit() 
+          courses_ids = [int(id) for id in request.form.getlist('courses')]
+          courses = Course.query.filter(Course.id.in_(courses_ids)).all()
+          student.courses.extend(courses)
+          db.session.commit()
           return redirect(url_for('students_list'))
      
      elif request.method == 'GET':
@@ -295,23 +337,10 @@ def students_delete():
      return redirect(url_for('students_list'))    
 
 
-@app.route('/courses_list')
-def courses_list():
-     with sqlite3.connect("instance/college.sqlite3") as con:
-          cur= con.cursor()
-          cur.execute("select * from course;")
-          rows = cur.fetchall()
-          my_courses_list = []
-          for course in rows:
-               course_dict = {}
-               course_dict['id'] = course[0]
-               course_dict['name'] = course[1]
-               course_dict['student_id'] = course[2]
-               my_courses_list.append(course_dict)
-          return render_template('courses_list.html',courses_list = my_courses_list)
 
 app.add_url_rule('/register','register',register,methods=['GET','POST'])
-#db.create_all()
+app.app_context().push()
+db.create_all()
 api.add_resource(Names,'/api/names')
 api.add_resource(Name,'/api/name/<int:pk>')
 api.add_resource(StudentsList,'/api/students')

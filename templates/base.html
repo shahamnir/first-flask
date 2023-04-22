@@ -9,14 +9,29 @@
 </head>
 
 <body>
-    <ul id="base_ul">
-        <li class="bs_li"><a href="{{url_for('home')}}">Home</a></li>
-        <li class="bs_li"><a href="{{url_for('login')}}">Login</a></li>
-        <li class="bs_li"><a href="{{url_for('logout')}}">Logout</a></li>
-        <li class="bs_li"><a href="{{url_for('students_list')}}">Students List</a></li>
-        <li class="bs_li"><a href="{{url_for('student')}}">Student Signup</a></li>
-      </ul>
-    {% block content %}
+    <div id="div1">
+        <ul class="base_ul">
+            <li class="bs_li"><a href="{{url_for('home')}}">Home</a></li>
+            <li class="bs_li"><a href="{{url_for('login')}}">Login</a></li>
+            <li class="bs_li"><a href="{{url_for('logout')}}">Logout</a></li>
+            <li class="bs_li"><a href="{{url_for('students_list')}}">Students List</a></li>
+            <li class="bs_li"><a href="{{url_for('student')}}">Student Signup</a></li>
+        </ul>
+    </div>
+    <div id="div2">
+        <ul class="base_ul">
+            <li class="bs_li"><a href="{{url_for('courses')}}">Courses List</a></li>
+            <li class="bs_li"><a href="{{url_for('add_course')}}">Add course</a></li>
+            <br>
+            <br>
+            <br>
+            
+        
+
+
+        </ul>
+    </div>
+        {% block content %}
     {% endblock %}
     
 </body>

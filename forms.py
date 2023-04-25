@@ -8,9 +8,14 @@ class StudentForm(Form):
     email = EmailField(label='email')
     age = IntegerField(label='Age')
     phone = StringField(label='Phone')
-    courses = SelectField(label='Courses')
+    #courses = SelectField(label='Courses')
 
 
 class CourseForm(Form):
     id = HiddenField()
     name = StringField(label='Course Name')
+
+
+class LangForm(Form):
+    id = HiddenField()
+    name = StringField(label='Language name')

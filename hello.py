@@ -2,11 +2,10 @@ from flask import Flask,request,render_template,url_for,redirect,\
 make_response,session,flash
 from flask_sqlalchemy import SQLAlchemy
 import sqlite3
-from forms import StudentForm,CourseForm
+from forms import StudentForm,CourseForm,LangForm
 from UserModule import User,UserList,is_auth
-#from students import Student,StudentList,get_student_by_email
 from flask_restful import Api, Resource,fields,marshal_with
-import json
+
 
 app = Flask('__name__')
 app.secret_key="flask-key"
@@ -73,35 +72,35 @@ class StudentApi(Resource):
           
 
 
-fake_database = {
-     1:{'name':'danny'},
-     2:{'name':'shalom'},
-     3:{'name':'ruth'},
-     }     
+# fake_database = {
+#      1:{'name':'danny'},
+#      2:{'name':'shalom'},
+#      3:{'name':'ruth'},
+#      }     
 
-class Names(Resource):
-     def get(self):
-         return fake_database
+# class Names(Resource):
+#      def get(self):
+#          return fake_database
 
 
-     def post(self):
-        data = request.json
-        nameID = len(fake_database.keys())+1
-        fake_database[nameID] = {'name':data['name']}
-        return fake_database
+#      def post(self):
+#         data = request.json
+#         nameID = len(fake_database.keys())+1
+#         fake_database[nameID] = {'name':data['name']}
+#         return fake_database
      
-class Name(Resource):
-     def get(self,pk):
-          return fake_database[pk]
+# class Name(Resource):
+#      def get(self,pk):
+#           return fake_database[pk]
      
-     def put(self,pk):
-          data = request.json
-          fake_database[pk] = {'name':data['name']} 
-          return fake_database[pk]
+#      def put(self,pk):
+#           data = request.json
+#           fake_database[pk] = {'name':data['name']} 
+#           return fake_database[pk]
      
-     def delete(self,pk):
-         fake_database.pop(pk)
-         return fake_database
+#      def delete(self,pk):
+#          fake_database.pop(pk)
+#          return fake_database
      
 
 
@@ -110,6 +109,12 @@ courses = db.Table('Courses',
         db.Column('student_id',db.Integer, db.ForeignKey('student.student_id'),primary_key=True),
         db.Column('course_id',db.Integer, db.ForeignKey('course.course_id'),primary_key=True)
                    )
+
+langs = db.Table('Langs',
+        db.Column('course_id',db.Integer, db.ForeignKey('course.course_id'),primary_key=True),
+        db.Column('lang_id',db.Integer, db.ForeignKey('language.lang_id'),primary_key=True)
+                   )                 
+
 
 class Student(db.Model):
     id = db.Column('student_id', db.Integer,primary_key = True)
@@ -131,10 +136,19 @@ class Student(db.Model):
 class Course(db.Model):
      id = db.Column('course_id',db.Integer,primary_key = True)
      name = db.Column(db.String(100))
+     langs = db.relationship('Language',secondary=langs, backref=db.backref('courses',lazy=True))
+
+     def __init__(self,name,langs=[]):
+          self.name = name
+          self.langs = langs
+
+class Language(db.Model):
+     id = db.Column('lang_id',db.Integer,primary_key = True)
+     name = db.Column(db.String(100))
 
      def __init__(self,name):
           self.name = name
-          
+
 
 @app.route('/')
 def home():
@@ -186,34 +200,69 @@ def grades():
     return render_template('grades_form.html',grades=grades)
 
 
+@app.route('/langs',methods=['GET','POST'])
+def langs():
+     if request.method == 'POST':
+          name = request.form['name']
+          lang = Language(name=name)
+          db.session.add(lang)
+          db.session.commit()
+          return redirect(url_for('langs'))
+     else:
+          langs = Language.query.all()
+          return render_template('langs.html',langs=langs)
+
+@app.route('/add_lang')     
+def add_lang():
+     form = LangForm()
+     return render_template('add_lang.html',form=form)
+
+
+
 @app.route('/courses',methods=['GET','POST'])
 def courses():     
     if request.method == 'POST':
           name = request.form['name']
-          course = Course(name=name)
+          #course = Course(name=name)
+          langs_ids = request.form.getlist('langs')
+          languages=[]
+          for lang_id in langs_ids:
+               lang = Language.query.get(int(lang_id))
+               languages.append(lang)
+          #course.langs.extend(languages)
+          course = Course(name=name,langs=languages)
           db.session.add(course)
           db.session.commit()
           return redirect(url_for('courses'))
     else:
           courses=Course.query.all()
-          return render_template('courses.html',courses=courses)
+          students = Student.query.all()
+          return render_template('courses.html',courses=courses, students=students)
      
 @app.route('/course/<int:id>',methods=['GET','POST'])
 def course(id):
      course = Course.query.get(id)
      if request.method == 'GET':
         form = CourseForm(obj=course)
-        return render_template('course.html',form=form)
+        langs = Language.query.all()
+        return render_template('course_update.html',form=form, langs=langs)
      
      else:
+          langs_ids = request.form.getlist('langs')
+          languages=[]
+          for lang_id in langs_ids:
+               lang = Language.query.get(int(lang_id))
+               languages.append(lang)
           course.name = request.form['name']
+          course.langs.extend(languages)
           db.session.commit()
           return redirect(url_for('courses'))
      
 @app.route('/add_course')
 def add_course():
      form = CourseForm()
-     return render_template('course.html',form=form)
+     langs = Language.query.all()
+     return render_template('course.html',form=form, langs=langs)
 
 @app.route('/courses_delete',methods=['POST'])
 def delete_courses():
@@ -233,9 +282,11 @@ def student():
           email = request.form['email']
           age = request.form['age']
           phone = request.form['phone']
+
+          student = Student(first_name,last_name,email,age,phone)
+
           courses_ids = [int(id) for id in request.form.getlist('courses')]
           courses = Course.query.filter(Course.id.in_(courses_ids)).all()
-          student = Student(first_name,last_name,email,age,phone)
           student.courses.extend(courses)
           db.session.add(student) 
           db.session.commit() 
@@ -268,6 +319,7 @@ def student_details(id):
 @app.route('/students_list')
 def students_list():
      students_list = Student.query.all()
+     courses = Course.query.all()
      # with sqlite3.connect("instance/college.sqlite3") as con:
      #       cur= con.cursor()
      #       cur.execute("select * from student;")
@@ -286,17 +338,16 @@ def students_list():
      #           my_students_list.append(student_dict)
      # return render_template('students_list.html' , students_list=my_students_list)
 
-     return render_template('students_list.html',students_list=students_list)
+     return render_template('students_list.html',students_list=students_list, courses = courses)
 
 @app.route('/search/',methods=['POST','GET'])
 def search_name():
+     courses = Course.query.all()
      if request.method == 'POST':
           name = request.form['name']
           students_list = Student.query.filter(Student.first_name == name)
-          return render_template('students_list.html',students_list=students_list)
-     elif request.method == 'GET':
-          students_list = Student.query.filter(Student.first_name == name)
-          return render_template('students_list.html',students_list=students_list) 
+          return render_template('students_list.html',students_list=students_list,courses=courses)
+
 
 
 @app.route('/studentUpdate/<id>',methods=['GET','POST'])
@@ -336,13 +387,32 @@ def students_delete():
      db.session.commit()
      return redirect(url_for('students_list'))    
 
+@app.route('/students_for_course',methods=['GET','POST'])
+def students_for_course():
+     course_name = request.form['courses']
+     course = Course.query.filter_by(name = course_name).first()
+     students = course.students
+     courses = Course.query.all()
+     return render_template('students_list.html',students_list=students, courses = courses)
 
+@app.route('/courses_for_student',methods=['POST'])
+def courses_for_student():
+     student_id = request.form['students']
+     student = Student.query.get(student_id)
+     courses = student.courses
+     students = Student.query.all()
+     return render_template('courses.html',courses=courses, students = students)
+
+@app.route('/course_for_lang')
+def course_for_lang():
+     lang_name = request.form['langs']
+     lang = Language.query.filter_by(Language.courses)
 
 app.add_url_rule('/register','register',register,methods=['GET','POST'])
 app.app_context().push()
 db.create_all()
-api.add_resource(Names,'/api/names')
-api.add_resource(Name,'/api/name/<int:pk>')
+# api.add_resource(Names,'/api/names')
+# api.add_resource(Name,'/api/name/<int:pk>')
 api.add_resource(StudentsList,'/api/students')
 api.add_resource(StudentApi,'/api/student/<int:pk>')
 

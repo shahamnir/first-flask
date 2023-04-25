@@ -10,27 +10,42 @@
 <body>
     {%block content%}
     <header>
-        <h1> Course List:</h1>
+        <h2> Course List:</h2>
     </header>
     <main>
         <div>
-            <p>
-                <form action="{{url_for('search_name')}}">
-                    <input type="text" placeholder="search by name" name="name"/>
-                    <input type="submit" value="search"/>
-                </form>
-            </p>
-
+            Search courses by student
         </div>
+        <form action="{{ url_for('courses_for_student')}}" method="post">
+            <select name="students" value="{student.id}">
+                {%for student in students%}
+                    <option value="{{student.id}}">{{student.first_name}} {{student.last_name}}</option>
+
+                {%endfor%}
+            </select>
+            <input type="submit" value="Search">
+        </form>
         <table>
             <tr>
                 <th>Course Name</th>
+                <th>Languages</th>
             </tr>
         {% if courses %}
         <form action="{{url_for('delete_courses')}}" method="post">
             {% for course in courses %}
                 <tr>
                     <td>{{course.name}}</td>
+                    <td>
+                        {%if course.langs%}
+                        {%for lang in course.langs%}
+                            {% if loop.last %}
+                            <span> {{lang.name}}</span>
+                            {% else %}
+                            <span> {{lang.name}}, </span>
+                            {% endif %}
+                        {%endfor%}
+                        {%endif%}
+                    </td>
                     <td><a href="{{ url_for('course', id=course.id) }}">details</a></td>
                     
                     <td><input type="checkbox" name="courses" value={{course.id}}></td>

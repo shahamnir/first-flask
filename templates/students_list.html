@@ -10,11 +10,20 @@
 </head>
 <body>
     {% block content %}
-    <h1> The Students List</h1>
+    <h2> Students List</h2>
     <p><form action="{{ url_for('search_name')}}"method='post'>
         Search by name <input type="text" name="name">
         <input type="submit" value="Search">
-    </form></p>    
+    </form></p> 
+    Search students by course 
+    <form action="{{ url_for('students_for_course')}}" method="post">
+        <select name="courses">
+            {%for course in courses%}
+                <option>{{course.name}}</option>
+            {%endfor%}
+        </select>
+        <input type="submit" value="Search">
+    </form>
     {% if students_list %}
     <form action="{{ url_for('students_delete')}}" method="post">
     <table>

@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{%block title%} Languages {%endblock%}</title>
+</head>
+<body>
+    {%block content%}
+    <h2>Languages List</h2>
+    <table>
+        <thead>
+            <tr>
+                <td> Language</td>
+                <td> Courses</td>
+            </tr>
+        </thead>
+        <tbody>          
+                {% for lang in langs%}
+                <tr>
+                <td> {{lang.name}}</td>
+                <td> 
+                {% if lang.courses%}
+                    {% for course in lang.courses%}
+                        {% if loop.last %}
+                            <span> {{course.name}}</span>
+                            {% else %}
+                            <span> {{course.name}}, </span>
+                        {% endif %}
+                    {% endfor%}   
+                {% endif %}
+                </td>
+                </tr>
+                {% endfor %}
+        </tbody>
+    </table>
+    {%endblock%}
+</body>
+</html>
